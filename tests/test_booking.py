@@ -110,3 +110,63 @@ def test_cumulative_booking_limit_12_places(client):
 
     assert int(club['points']) == 17
     assert b"12 places" in response2.data or b"deja reserves" in response2.data or b"quota" in response2.data.lower()
+
+# Vérifie qu'on ne peut pas réserver de places pour une compétition passée
+
+def test_cannot_book_past_competition(client):
+
+    club = [c for c in clubs if c['name'] == 'Simply Lift'][0]
+    competition = [c for c in competitions if c['name'] == 'Fall Classic'][0]
+
+    competition['date'] = "2026-07-04 10:01:24"
+    initial_points = int(club['points'])
+    initial_places = int(competition['numberOfPlaces'])
+
+    response = client.post('/purchasePlaces', data={
+        'club': club['name'],
+        'competition': competition['name'],
+        'places': '2'
+    })
+
+    assert response.status_code == 200
+
+    assert int(club['points']) == initial_points
+    assert int(competition['numberOfPlaces']) == initial_places
+    assert "passée" in response.data.decode() or "terminée" in response.data.decode()
+
+# Vérifie que la saisie d'un nombre négatif, nul ou de texte est rejetée
+
+def test_invalid_places_input(client):
+    club = [c for c in clubs if c['name'] == 'Simply Lift'][0]
+    competition = [c for c in competitions if c['name'] == 'Spring Festival'][0]
+
+    initial_points = int(club['points'])
+    initial_places = int(competition['numberOfPlaces'])
+
+    response_neg = client.post('/purchasePlaces', data={
+        'club': club['name'],
+        'competition': competition['name'],
+        'places': '-3'
+    })
+    assert response_neg.status_code == 200
+
+    assert int(club['points']) == initial_points
+    assert "positif" in response_neg.data.decode().lower() or "invalide" in response_neg.data.decode().lower()
+
+    response_zero = client.post('/purchasePlaces', data={
+        'club': club['name'],
+        'competition': competition['name'],
+        'places': '0'
+    })
+    assert response_zero.status_code == 200
+
+    assert int(club['points']) == initial_points
+
+    response_text = client.post('/purchasePlaces', data={
+        'club': club['name'],
+        'competition': competition['name'],
+        'places': 'abc'
+    })
+    assert response_text.status_code == 200
+    
+    assert int(club['points']) == initial_points
