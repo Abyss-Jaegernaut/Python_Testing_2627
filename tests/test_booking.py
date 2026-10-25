@@ -171,7 +171,7 @@ def test_invalid_places_input(client):
     
     assert int(club['points']) == initial_points
 
-# Vérifie que la route /book gère proprement les noms inconnus
+# Vérifie que la route gère proprement les noms inconnus
 
 def test_book_unknown_club_or_competition(client):
 
@@ -184,3 +184,16 @@ def test_book_unknown_club_or_competition(client):
     assert response_comp.status_code == 200
     
     assert "introuvable" in response_comp.data.decode().lower() or "wrong" in response_comp.data.decode().lower() or "welcome" in response_comp.data.decode().lower()
+
+# Vérifie que la réservation réussie applique le pattern PRG (redirection 302 pour éviter la double soumission de rafraichissement)
+
+def test_purchase_places_redirects_after_post(client):
+    client.post('/showSummary', data={'email': 'john@simplylift.co'})
+
+    response = client.post('/purchasePlaces', data={
+        'club': 'Simply Lift',
+        'competition': 'Spring Festival',
+        'places': '1'
+    })
+
+    assert response.status_code == 302
