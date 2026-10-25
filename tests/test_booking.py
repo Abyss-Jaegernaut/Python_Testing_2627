@@ -170,3 +170,17 @@ def test_invalid_places_input(client):
     assert response_text.status_code == 200
     
     assert int(club['points']) == initial_points
+
+# Vérifie que la route /book gère proprement les noms inconnus
+
+def test_book_unknown_club_or_competition(client):
+
+    response_club = client.get('/book/Spring Festival/RealMadrid', follow_redirects=True)
+    assert response_club.status_code == 200
+
+    assert "introuvable" in response_club.data.decode().lower() or "wrong" in response_club.data.decode().lower() or "welcome" in response_club.data.decode().lower()
+
+    response_comp = client.get('/book/LaLiga/Simply Lift', follow_redirects=True)
+    assert response_comp.status_code == 200
+    
+    assert "introuvable" in response_comp.data.decode().lower() or "wrong" in response_comp.data.decode().lower() or "welcome" in response_comp.data.decode().lower()
