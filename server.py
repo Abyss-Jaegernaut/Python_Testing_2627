@@ -50,7 +50,13 @@ def book(competition,club):
 def purchasePlaces():
     competition = [c for c in competitions if c['name'] == request.form['competition']][0]
     club = [c for c in clubs if c['name'] == request.form['club']][0]
-    placesRequired = int(request.form['places'])
+    try:
+        placesRequired = int(request.form['places'])
+        if placesRequired <= 0:
+            raise ValueError()
+    except (ValueError, TypeError):
+        flash("Veuillez saisir un nombre de places valide et strictement positif.")
+        return render_template('welcome.html', club=club, competitions=competitions)
 
     comp_date = datetime.strptime(competition['date'], "%Y-%m-%d %H:%M:%S")
     if comp_date < datetime.now():
