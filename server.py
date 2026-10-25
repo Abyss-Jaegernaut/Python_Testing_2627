@@ -19,6 +19,7 @@ app.secret_key = 'something_special'
 
 competitions = loadCompetitions()
 clubs = loadClubs()
+booking_history = {} 
 
 @app.route('/')
 def index():
@@ -44,14 +45,16 @@ def book(competition,club):
         return render_template('welcome.html', club=club, competitions=competitions)
 
 
-@app.route('/purchasePlaces',methods=['POST'])
+@app.route('/purchasePlaces', methods=['POST'])
 def purchasePlaces():
     competition = [c for c in competitions if c['name'] == request.form['competition']][0]
     club = [c for c in clubs if c['name'] == request.form['club']][0]
     placesRequired = int(request.form['places'])
 
-    if placesRequired > 12:
-        flash("Vous ne pouvez pas réserver plus de 12 places par compétition.")
+    already_booked = booking_history.get((club['name'], competition['name']), 0)
+    if already_booked + placesRequired > 12:
+        places_restantes = 12 - already_booked
+        flash(f"Vous ne pouvez pas réserver plus de 12 places au total pour cette compétition. Vous en avez déjà réservé {already_booked}.")
         return render_template('welcome.html', club=club, competitions=competitions)
 
     if placesRequired > int(competition['numberOfPlaces']):
@@ -64,8 +67,11 @@ def purchasePlaces():
 
     competition['numberOfPlaces'] = int(competition['numberOfPlaces']) - placesRequired
     club['points'] = int(club['points']) - placesRequired
+    booking_history[(club['name'], competition['name'])] = already_booked + placesRequired
+
     flash('Great-booking complete!')
     return render_template('welcome.html', club=club, competitions=competitions)
+
 
 
 # TODO: Add route for points display
