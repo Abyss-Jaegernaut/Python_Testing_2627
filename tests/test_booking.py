@@ -82,3 +82,31 @@ def test_purchase_more_than_12_places(client):
     assert int(club['points']) == initial_points
     assert int(competition['numberOfPlaces']) == initial_competition_places
     assert b"12 places" in response.data
+
+# Vérifie qu'un club ne peut pas dépasser 12 places en faisant plusieurs réservations successives
+
+def test_cumulative_booking_limit_12_places(client):
+
+    club = [c for c in clubs if c['name'] == 'Simply Lift'][0]
+    competition = [c for c in competitions if c['name'] == 'Spring Festival'][0]
+
+    club['points'] = 25
+    competition['numberOfPlaces'] = 25
+
+    response1 = client.post('/purchasePlaces', data={
+        'club': club['name'],
+        'competition': competition['name'],
+        'places': '8'
+    })
+    assert response1.status_code == 200
+    assert int(club['points']) == 17
+
+    response2 = client.post('/purchasePlaces', data={
+        'club': club['name'],
+        'competition': competition['name'],
+        'places': '5'
+    })
+    assert response2.status_code == 200
+
+    assert int(club['points']) == 17
+    assert b"12 places" in response2.data or b"deja reserves" in response2.data or b"quota" in response2.data.lower()
