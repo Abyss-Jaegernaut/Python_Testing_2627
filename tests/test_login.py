@@ -26,3 +26,16 @@ def test_login_empty_email(client):
     response = client.post('/showSummary', data={'email': ''}, follow_redirects=True)
     assert response.status_code == 200
     assert b"Welcome to the GUDLFT Registration Portal!" in response.data
+
+# Vérifie la gestion sécurisée de la session utilisateur lors du login et du logout
+
+def test_login_and_logout_session(client):
+    client.post('/showSummary', data={'email': 'john@simplylift.co'})
+    with client.session_transaction() as session:
+        assert session.get('user') == 'john@simplylift.co'
+
+    response = client.get('/logout', follow_redirects=True)
+    assert response.status_code == 200
+    
+    with client.session_transaction() as session:
+        assert 'user' not in session
