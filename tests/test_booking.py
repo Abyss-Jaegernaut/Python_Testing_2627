@@ -60,3 +60,25 @@ def test_purchase_more_places_than_club_points(client):
     assert int(club['points']) == initial_points
     assert int(competition['numberOfPlaces']) == initial_competition_places
     assert b"pas assez de points" in response.data.lower() or b"insuffisant" in response.data.lower()
+
+#Vérifie qu'un club ne peut pas réserver plus de 12 places pour une compétition
+
+def test_purchase_more_than_12_places(client):
+
+    club = [c for c in clubs if c['name'] == 'Simply Lift'][0]
+    competition = [c for c in competitions if c['name'] == 'Spring Festival'][0]
+
+    initial_points = int(club['points'])
+    initial_competition_places = int(competition['numberOfPlaces'])
+
+    response = client.post('/purchasePlaces', data={
+        'club': club['name'],
+        'competition': competition['name'],
+        'places': '13'
+    })
+
+    assert response.status_code == 200
+
+    assert int(club['points']) == initial_points
+    assert int(competition['numberOfPlaces']) == initial_competition_places
+    assert b"12 places" in response.data
