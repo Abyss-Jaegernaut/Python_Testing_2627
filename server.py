@@ -1,5 +1,5 @@
 import json
-from flask import Flask,render_template,request,redirect,flash,url_for
+from flask import Flask,render_template,request,redirect,flash,url_for,session 
 from datetime import datetime
 
 
@@ -33,6 +33,9 @@ def showSummary():
     if not club:
         flash("Adresse email non reconnue. Veuillez réessayer.")
         return redirect(url_for('index'))
+
+    session['user'] = club['email']
+
     return render_template('welcome.html', club=club, competitions=competitions)
 
 @app.route('/book/<competition>/<club>')
@@ -96,4 +99,5 @@ def purchasePlaces():
 
 @app.route('/logout')
 def logout():
+    session.clear()
     return redirect(url_for('index'))
