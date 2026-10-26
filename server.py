@@ -22,6 +22,13 @@ competitions = loadCompetitions()
 clubs = loadClubs()
 booking_history = {} 
 
+@app.context_processor
+def inject_competitions():
+    now = datetime.now()
+    upcoming = [c for c in competitions if datetime.strptime(c['date'], "%Y-%m-%d %H:%M:%S") >= now]
+    past = [c for c in competitions if datetime.strptime(c['date'], "%Y-%m-%d %H:%M:%S") < now]
+    return dict(upcoming_competitions=upcoming, past_competitions=past)
+
 @app.route('/')
 def index():
     return render_template('index.html')
