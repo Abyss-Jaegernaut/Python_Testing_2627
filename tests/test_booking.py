@@ -200,3 +200,14 @@ def test_purchase_places_redirects_after_post(client):
     })
 
     assert response.status_code == 302
+
+# Vérifie la séparation visuelle entre compétitions à venir et passée
+
+def test_welcome_separates_upcoming_and_past_competitions(client):
+    response = client.post('/showSummary', data={'email': 'john@simplylift.co'})
+    assert response.status_code == 200
+    data = response.data.decode()
+
+    assert ("Compétitions à venir" in data) or ("Upcoming Competitions" in data)
+    assert ("Compétitions passées" in data) or ("Past Competitions" in data)
+    assert ("Terminée" in data) or ("closed" in data)
