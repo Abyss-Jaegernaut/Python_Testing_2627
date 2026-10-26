@@ -211,3 +211,15 @@ def test_welcome_separates_upcoming_and_past_competitions(client):
     assert ("Compétitions à venir" in data) or ("Upcoming Competitions" in data)
     assert ("Compétitions passées" in data) or ("Past Competitions" in data)
     assert ("Terminée" in data) or ("closed" in data)
+
+# Vérifie la présence des contraintes min, max, required et du lien d'annulation
+
+def test_booking_form_html5_validation_and_cancel_link(client):
+    response = client.get('/book/Spring Festival/Simply Lift')
+    assert response.status_code == 200
+    data = response.data.decode()
+
+    assert 'min="1"' in data
+    assert 'max="12"' in data
+    assert 'required' in data
+    assert 'showSummary' in data or 'Annuler' in data or 'Cancel' in data
