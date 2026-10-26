@@ -34,6 +34,7 @@ class SecretaryUser(HttpUser):
 
     @task(1)
     def login_and_logout(self):
-        """Cycle complet de connexion et déconnexion."""
         self.client.get("/logout")
-        self.client.post("/showSummary", data={"email": "admin@irontemple.com"})
+        self.client.post(
+            "/showSummary", data={"email": "admin@irontemple.com"}
+        )

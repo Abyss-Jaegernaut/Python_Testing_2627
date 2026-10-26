@@ -1,11 +1,12 @@
 from server import clubs, competitions
 
+
 def test_deduction_points_club(client):
-    
+    """Vérifie la déduction effective des points après réservation."""
     club = [c for c in clubs if c['name'] == 'Simply Lift'][0]
     initial_points = int(club['points'])
     places_to_buy = 3
-   
+
     client.post('/showSummary', data={'email': 'john@simplylift.co'})
 
     response = client.post('/purchasePlaces', data={
@@ -16,13 +17,12 @@ def test_deduction_points_club(client):
 
     assert response.status_code == 200
     assert int(club['points']) == initial_points - places_to_buy
-    expected_display = f"Points available: {initial_points - places_to_buy}".encode()
-    assert expected_display in response.data
+    expected = f"Points available: {initial_points - places_to_buy}".encode()
+    assert expected in response.data
 
-# Vérifie qu'on ne peut pas réserver plus de places qu'il n'en reste dans la compétition
 
 def test_surreservation_competition(client):
-    
+    """Vérifie le blocage si la demande dépasse les places disponibles."""
     competition = [c for c in competitions if c['name'] == 'Fall Classic'][0]
     club = [c for c in clubs if c['name'] == 'Simply Lift'][0]
 
@@ -36,20 +36,23 @@ def test_surreservation_competition(client):
     })
 
     assert response.status_code == 200
-
     assert int(competition['numberOfPlaces']) == 4
     assert int(club['points']) == initial_club_points
-    assert b"pas assez de places" in response.data.lower() or b"disponibles" in response.data.lower()
+    assert (
+        b"pas assez de places" in response.data.lower()
+        or b"disponibles" in response.data.lower()
+    )
 
-# Vérifie qu'un club ne peut pas acheter plus de places que son solde de points le permet
 
 def test_purchase_more_places_than_club_points(client):
-
+    """Vérifie le blocage si le club n'a pas assez de points."""
     club = [c for c in clubs if c['name'] == 'Iron Temple'][0]
-    competition = [c for c in competitions if c['name'] == 'Spring Festival'][0]
+    competition = [
+        c for c in competitions if c['name'] == 'Spring Festival'
+    ][0]
 
     initial_points = int(club['points'])
-    initial_competition_places = int(competition['numberOfPlaces'])
+    initial_places = int(competition['numberOfPlaces'])
 
     response = client.post('/purchasePlaces', data={
         'club': club['name'],
@@ -58,20 +61,23 @@ def test_purchase_more_places_than_club_points(client):
     })
 
     assert response.status_code == 200
-
     assert int(club['points']) == initial_points
-    assert int(competition['numberOfPlaces']) == initial_competition_places
-    assert b"pas assez de points" in response.data.lower() or b"insuffisant" in response.data.lower()
+    assert int(competition['numberOfPlaces']) == initial_places
+    assert (
+        b"pas assez de points" in response.data.lower()
+        or b"insuffisant" in response.data.lower()
+    )
 
-#Vérifie qu'un club ne peut pas réserver plus de 12 places pour une compétition
 
 def test_purchase_more_than_12_places(client):
-
+    """Vérifie qu'un club ne peut pas réserver plus de 12 places d'un coup."""
     club = [c for c in clubs if c['name'] == 'Simply Lift'][0]
-    competition = [c for c in competitions if c['name'] == 'Spring Festival'][0]
+    competition = [
+        c for c in competitions if c['name'] == 'Spring Festival'
+    ][0]
 
     initial_points = int(club['points'])
-    initial_competition_places = int(competition['numberOfPlaces'])
+    initial_places = int(competition['numberOfPlaces'])
 
     response = client.post('/purchasePlaces', data={
         'club': club['name'],
@@ -80,17 +86,17 @@ def test_purchase_more_than_12_places(client):
     })
 
     assert response.status_code == 200
-
     assert int(club['points']) == initial_points
-    assert int(competition['numberOfPlaces']) == initial_competition_places
+    assert int(competition['numberOfPlaces']) == initial_places
     assert b"12 places" in response.data
 
-# Vérifie qu'un club ne peut pas dépasser 12 places en faisant plusieurs réservations successives
 
 def test_cumulative_booking_limit_12_places(client):
-
+    """Vérifie qu'un club ne peut pas dépasser 12 places en cumulé."""
     club = [c for c in clubs if c['name'] == 'Simply Lift'][0]
-    competition = [c for c in competitions if c['name'] == 'Spring Festival'][0]
+    competition = [
+        c for c in competitions if c['name'] == 'Spring Festival'
+    ][0]
 
     club['points'] = 25
     competition['numberOfPlaces'] = 25
@@ -110,14 +116,16 @@ def test_cumulative_booking_limit_12_places(client):
         'places': '5'
     })
     assert response2.status_code == 200
-
     assert int(club['points']) == 17
-    assert b"12 places" in response2.data or b"deja reserves" in response2.data or b"quota" in response2.data.lower()
+    assert (
+        b"12 places" in response2.data
+        or b"deja reserves" in response2.data
+        or b"quota" in response2.data.lower()
+    )
 
-# Vérifie qu'on ne peut pas réserver de places pour une compétition passée
 
 def test_cannot_book_past_competition(client):
-
+    """Vérifie l'interdiction de réserver sur une compétition passée."""
     club = [c for c in clubs if c['name'] == 'Simply Lift'][0]
     competition = [c for c in competitions if c['name'] == 'Fall Classic'][0]
 
@@ -132,19 +140,22 @@ def test_cannot_book_past_competition(client):
     })
 
     assert response.status_code == 200
-
     assert int(club['points']) == initial_points
     assert int(competition['numberOfPlaces']) == initial_places
-    assert "passée" in response.data.decode() or "terminée" in response.data.decode()
+    assert (
+        "passée" in response.data.decode()
+        or "terminée" in response.data.decode()
+    )
 
-# Vérifie que la saisie d'un nombre négatif, nul ou de texte est rejetée
 
 def test_invalid_places_input(client):
+    """Vérifie le rejet des saisies de places négatives, nulles ou texte."""
     club = [c for c in clubs if c['name'] == 'Simply Lift'][0]
-    competition = [c for c in competitions if c['name'] == 'Spring Festival'][0]
+    competition = [
+        c for c in competitions if c['name'] == 'Spring Festival'
+    ][0]
 
     initial_points = int(club['points'])
-    initial_places = int(competition['numberOfPlaces'])
 
     response_neg = client.post('/purchasePlaces', data={
         'club': club['name'],
@@ -152,9 +163,11 @@ def test_invalid_places_input(client):
         'places': '-3'
     })
     assert response_neg.status_code == 200
-
     assert int(club['points']) == initial_points
-    assert "positif" in response_neg.data.decode().lower() or "invalide" in response_neg.data.decode().lower()
+    assert (
+        "positif" in response_neg.data.decode().lower()
+        or "invalide" in response_neg.data.decode().lower()
+    )
 
     response_zero = client.post('/purchasePlaces', data={
         'club': club['name'],
@@ -162,7 +175,6 @@ def test_invalid_places_input(client):
         'places': '0'
     })
     assert response_zero.status_code == 200
-
     assert int(club['points']) == initial_points
 
     response_text = client.post('/purchasePlaces', data={
@@ -171,26 +183,34 @@ def test_invalid_places_input(client):
         'places': 'abc'
     })
     assert response_text.status_code == 200
-    
     assert int(club['points']) == initial_points
 
-# Vérifie que la route gère proprement les noms inconnus
 
 def test_book_unknown_club_or_competition(client):
-
-    response_club = client.get('/book/Spring Festival/RealMadrid', follow_redirects=True)
+    """Vérifie la gestion d'URLs de réservation invalides ou forgées."""
+    response_club = client.get(
+        '/book/Spring Festival/RealMadrid', follow_redirects=True
+    )
     assert response_club.status_code == 200
+    assert (
+        "introuvable" in response_club.data.decode().lower()
+        or "wrong" in response_club.data.decode().lower()
+        or "welcome" in response_club.data.decode().lower()
+    )
 
-    assert "introuvable" in response_club.data.decode().lower() or "wrong" in response_club.data.decode().lower() or "welcome" in response_club.data.decode().lower()
-
-    response_comp = client.get('/book/LaLiga/Simply Lift', follow_redirects=True)
+    response_comp = client.get(
+        '/book/LaLiga/Simply Lift', follow_redirects=True
+    )
     assert response_comp.status_code == 200
-    
-    assert "introuvable" in response_comp.data.decode().lower() or "wrong" in response_comp.data.decode().lower() or "welcome" in response_comp.data.decode().lower()
+    assert (
+        "introuvable" in response_comp.data.decode().lower()
+        or "wrong" in response_comp.data.decode().lower()
+        or "welcome" in response_comp.data.decode().lower()
+    )
 
-# Vérifie que la réservation réussie applique le pattern PRG (redirection 302 pour éviter la double soumission de rafraichissement)
 
 def test_purchase_places_redirects_after_post(client):
+    """Vérifie l'application du pattern PRG (redirection 302)."""
     client.post('/showSummary', data={'email': 'john@simplylift.co'})
 
     response = client.post('/purchasePlaces', data={
@@ -201,20 +221,24 @@ def test_purchase_places_redirects_after_post(client):
 
     assert response.status_code == 302
 
-# Vérifie la séparation visuelle entre compétitions à venir et passée
 
 def test_welcome_separates_upcoming_and_past_competitions(client):
-    response = client.post('/showSummary', data={'email': 'john@simplylift.co'})
+    """Vérifie la séparation visuelle entre compétitions à venir et passées."""
+    response = client.post(
+        '/showSummary', data={'email': 'john@simplylift.co'}
+    )
     assert response.status_code == 200
     data = response.data.decode()
 
-    assert ("Compétitions à venir" in data) or ("Upcoming Competitions" in data)
+    assert (
+        ("Compétitions à venir" in data) or ("Upcoming Competitions" in data)
+    )
     assert ("Compétitions passées" in data) or ("Past Competitions" in data)
     assert ("Terminée" in data) or ("closed" in data)
 
-# Vérifie la présence des contraintes min, max, required et du lien d'annulation
 
 def test_booking_form_html5_validation_and_cancel_link(client):
+    """Vérifie les contraintes min, max, required et le lien d'annulation."""
     response = client.get('/book/Spring Festival/Simply Lift')
     assert response.status_code == 200
     data = response.data.decode()

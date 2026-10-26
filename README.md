@@ -72,7 +72,7 @@ Merci !
    Pour vérifier la conformité PEP 8 du code et générer le rapport HTML :
 
    ```bash
-   flake8 --format=html --htmldir=flake8_report server.py
+   flake8 --format=html --htmldir=flake8_report server.py tests/
    ```
    Le rapport est consultable dans `flake8_report/index.html`.
 7. Tests de Performance (Locust)
