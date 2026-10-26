@@ -26,15 +26,21 @@ booking_history = {}
 def index():
     return render_template('index.html')
 
-@app.route('/showSummary', methods=['POST'])
+@app.route('/showSummary', methods=['GET','POST'])
 def showSummary():
-    email = request.form.get('email', '').strip()
-    club = next((c for c in clubs if c['email'] == email), None)
-    if not club:
-        flash("Adresse email non reconnue. Veuillez réessayer.")
-        return redirect(url_for('index'))
-
-    session['user'] = club['email']
+    if request.method == 'POST':
+        email = request.form.get('email', '').strip()
+        club = next((c for c in clubs if c['email'] == email), None)
+        if not club:
+            flash("Adresse email non reconnue. Veuillez réessayer.")
+            return redirect(url_for('index'))
+        session['user'] = club['email']
+    else:
+        if 'user' not in session:
+            return redirect(url_for('index'))
+        club = next((c for c in clubs if c['email'] == session['user']), None)
+        if not club:
+            return redirect(url_for('index'))
 
     return render_template('welcome.html', club=club, competitions=competitions)
 
@@ -90,7 +96,8 @@ def purchasePlaces():
     booking_history[(club['name'], competition['name'])] = already_booked + placesRequired
 
     flash('Great-booking complete!')
-    return render_template('welcome.html', club=club, competitions=competitions)
+    return redirect(url_for('showSummary'))
+
 
 
 

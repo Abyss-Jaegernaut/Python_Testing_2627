@@ -5,12 +5,14 @@ def test_deduction_points_club(client):
     club = [c for c in clubs if c['name'] == 'Simply Lift'][0]
     initial_points = int(club['points'])
     places_to_buy = 3
+   
+    client.post('/showSummary', data={'email': 'john@simplylift.co'})
 
     response = client.post('/purchasePlaces', data={
         'club': 'Simply Lift',
         'competition': 'Spring Festival',
         'places': str(places_to_buy)
-    })
+    }, follow_redirects=True)
 
     assert response.status_code == 200
     assert int(club['points']) == initial_points - places_to_buy
@@ -97,7 +99,8 @@ def test_cumulative_booking_limit_12_places(client):
         'club': club['name'],
         'competition': competition['name'],
         'places': '8'
-    })
+    }, follow_redirects=True)
+
     assert response1.status_code == 200
     assert int(club['points']) == 17
 
