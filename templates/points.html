@@ -4,26 +4,70 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Points Display | GUDLFT</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+    </style>
 </head>
-<body>
-    <h2>Clubs Points Summary</h2>
-    <table border="1">
-        <thead>
-            <tr>
-                <th>Club Name</th>
-                <th>Points Available</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for club in clubs %}
-            <tr>
-                <td>{{ club['name'] }}</td>
-                <td>{{ club['points'] }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-    <br>
-    <a href="{{ url_for('index') }}">Back to home</a>
+<body class="bg-slate-50/70 text-slate-800 min-h-screen p-4 sm:p-6 lg:p-8 antialiased flex items-center justify-center">
+    <div class="w-full max-w-3xl space-y-5">
+        
+        <!-- Header -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+                <h2 class="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">Clubs Points Summary</h2>
+                <p class="text-xs sm:text-sm text-slate-500">Transparence des points disponibles pour chaque club</p>
+            </div>
+            
+            <a 
+                href="{{ url_for('index') }}" 
+                class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs sm:text-sm font-semibold transition-colors shadow-sm self-start sm:self-auto"
+            >
+                <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                </svg>
+                <span>Back to home</span>
+            </a>
+        </div>
+
+        <!-- Table Card -->
+        <div class="bg-white border border-slate-200/90 rounded-2xl shadow-sm overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse text-sm">
+                    <thead>
+                        <tr class="bg-slate-50/80 border-b border-slate-200 text-xs uppercase tracking-wider text-slate-600 font-semibold">
+                            <th scope="col" class="py-3.5 px-6">Club Name</th>
+                            <th scope="col" class="py-3.5 px-6 text-right">Points Available</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        {% for club in clubs %}
+                            <tr class="hover:bg-slate-50/60 transition-colors">
+                                <td class="py-4 px-6 font-semibold text-slate-900 flex items-center gap-3">
+                                    <div class="w-8 h-8 rounded-lg bg-indigo-50 border border-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-xs">
+                                        {{ club['name'][:2]|upper }}
+                                    </div>
+                                    <span>{{ club['name'] }}</span>
+                                </td>
+                                <td class="py-4 px-6 text-right">
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 ring-1 ring-emerald-600/20">
+                                        {{ club['points'] }} pts
+                                    </span>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="py-3 px-6 bg-slate-50/50 border-t border-slate-100 text-xs text-slate-500">
+                <span>Total des clubs : <strong class="text-slate-700">{{ clubs|length }}</strong></span>
+            </div>
+        </div>
+
+    </div>
 </body>
 </html>
